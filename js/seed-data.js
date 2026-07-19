@@ -1,0 +1,10 @@
+import { createTask } from "./models.js";
+const ev = "https://www.evernote.com/";
+const task = (title, area, subarea, block, contexts, energy, priority = "normal", extra = {}) => createTask({ title, evernoteUrl: ev, area, subarea, minimumBlockMinutes: block, estimatedTotalMinutes: block * 2, contexts, energyRequired: energy, priority, ...extra });
+export function seedTasks() { const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0,10); return [
+ task("Responder propostas pendentes", "trabalho", "operacional", 30, ["computador","internet"], 2, "alta", { deadline: tomorrow, initialAction: "Abrir a lista e responder a primeira proposta." }),
+ task("Revisar fluxo financeiro", "trabalho", "administracao", 30, ["computador"], 2, "alta"), task("Planejar campanha do próximo mês", "trabalho", "marketing", 60, ["computador","internet"], 3, "alta"), task("Mapear novo produto", "trabalho", "desenvolvimento_empresa", 30, ["computador","silencio"], 3, "alta"), task("Organizar arquivos do projeto", "trabalho", "organizacao_trabalho", 15, ["computador"], 1),
+ task("Processar caixa de entrada do GTD", "organizacao", "geral", 15, ["computador"], 1, "alta"), task("Lançar gastos da semana", "organizacao", "geral", 15, ["computador"], 1), task("Revisar arquivos digitais", "organizacao", "geral", 30, ["computador"], 1),
+ task("Praticar inglês", "estudo", "linguas", 15, ["celular","internet"], 1, "normal", { language: "Inglês" }), task("Praticar piano", "estudo", "piano", 30, ["piano","casa"], 2, "alta"), task("Estudar capítulo de livro técnico", "estudo", "livro_tecnico", 30, ["leitura_disponivel","silencio"], 2, "alta"), task("Resolver questões de concurso", "estudo", "concurso", 30, ["computador","silencio"], 3, "alta"),
+ task("Ler livro atual", "leitura", "geral", 15, ["leitura_disponivel"], 1), task("Ler artigo salvo", "leitura", "geral", 15, ["celular","internet"], 1), task("Assistir episódio de série", "lazer", "filmes_series", 30, ["casa","internet"], 1), task("Jogar partida planejada", "lazer", "jogos", 30, ["computador","internet"], 1)
+ ]; }
