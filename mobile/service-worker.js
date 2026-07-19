@@ -1,2 +1,5 @@
-﻿const CACHE="proxima-acao-mobile-v2";const ASSETS=["./","./index.html","./mobile.css","./mobile.js","./manifest.webmanifest","../classic/constants.js?v=7","../classic/models.js?v=7","../classic/analytics.js?v=7","../classic/recommendation-engine.js?v=7"];self.addEventListener("install",e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())));self.addEventListener("activate",e=>e.waitUntil(self.clients.claim()));self.addEventListener("fetch",e=>e.respondWith(caches.match(e.request).then(c=>c||fetch(e.request).then(r=>{const copy=r.clone();caches.open(CACHE).then(cache=>cache.put(e.request,copy));return r}).catch(()=>c))));
-
+const CACHE="proxima-acao-mobile-v3";
+const ASSETS=["./","./index.html","./mobile.css","./mobile.js","./manifest.webmanifest","../classic/constants.js?v=8","../classic/models.js?v=8","../classic/analytics.js?v=8","../classic/recommendation-engine.js?v=8"];
+self.addEventListener("install",event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting())));
+self.addEventListener("activate",event=>event.waitUntil(self.clients.claim()));
+self.addEventListener("fetch",event=>event.respondWith(caches.match(event.request).then(cached=>cached||fetch(event.request).then(response=>{const copy=response.clone();caches.open(CACHE).then(cache=>cache.put(event.request,copy));return response}).catch(()=>cached))));
