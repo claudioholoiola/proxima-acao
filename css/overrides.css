@@ -1,2 +1,8 @@
 .form-grid [hidden] { display: none !important; }
 .timer-overtime { color: #d65353 !important; }
+.taxonomy-panel { grid-column: 1 / -1; }
+.taxonomy-list { display: grid; gap: 12px; margin-top: 16px; }
+.taxonomy-list article { border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
+.taxonomy-row, .taxonomy-add { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.taxonomy-row input, .taxonomy-add input { flex: 1; min-width: 180px; border: 1px solid var(--border); border-radius: 8px; padding: 8px; }
+.taxonomy-subareas { display: grid; gap: 7px; margin: 10px 0 0 18px; }
