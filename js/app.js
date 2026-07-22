@@ -1,4 +1,4 @@
-﻿import { completeMonthlyCycle, createSession, createTask, isMonthlyRequired, now } from "./models.js";
+import { completeMonthlyCycle, createSession, createTask, isMonthlyRequired, now } from "./models.js";
 import { clearData, downloadJson, exportData, exportMobilePackage, importData, loadDatabase, mergeMobileUpdate, saveDatabase } from "./storage.js";
 import { isValidFrequencySession } from "./analytics.js";
 import { recommend, runRecommendationTests } from "./recommendation-engine.js";
@@ -6,11 +6,12 @@ import { seedTasks } from "./seed-data.js";
 import { filterTasks, manualLogModal, renderApp, taskModal, taskPickerModal, toast } from "./ui.js";
 import { AREAS, AREA_COLORS, AREA_LABELS, SUBAREAS, SUBAREA_LABELS } from "./constants.js";
 const BASE_AREAS={...AREAS}, BASE_SUBAREAS=Object.fromEntries(Object.entries(SUBAREAS).map(([area,values])=>[area,[...values]])), BASE_AREA_LABELS={...AREA_LABELS}, BASE_SUBAREA_LABELS={...SUBAREA_LABELS};
-let db = loadDatabase(), page = "hoje", recommendation = null, pendingTaskLink = null;
+let db = loadDatabase(), page = "hoje", recommendation = null, pendingTaskLink = null, analysisFilter = { preset:"month", start:"", end:"" };
 applyTaxonomy();
 window.runRecommendationTests = runRecommendationTests;
 const persist = () => saveDatabase(db);
-function render() { document.querySelector("#app").innerHTML = renderApp(db, page, recommendation); addTaskStatusControls(); addTimerNotificationControls(); addTaxonomyControls(); bind(); if (db.currentSession) tickTimer(); }
+function render() { document.querySelector("#app").innerHTML = renderApp(db, page, recommendation, analysisFilter); addTaskStatusControls(); addTimerNotificationControls(); addTaxonomyControls(); bind(); bindAnalysisFilters(); if (db.currentSession) tickTimer(); }
+function bindAnalysisFilters() { const preset=document.querySelector("#analysis-period"), start=document.querySelector("#analysis-start"), end=document.querySelector("#analysis-end"); preset?.addEventListener("change",event=>{ analysisFilter={preset:event.currentTarget.value,start:analysisFilter.start,end:analysisFilter.end}; render(); }); const update=()=>{ analysisFilter={preset:"custom",start:start?.value||"",end:end?.value||""}; render(); }; start?.addEventListener("change",update); end?.addEventListener("change",update); }
 function inputForRecommendation() { return { duration: Number(db.preferences.duration), energy: Number(db.preferences.energy), contexts: db.preferences.contexts || [] }; }
 function findRecommendation(area = null) { const source = area ? { ...db, tasks: db.tasks.filter(t => t.area === area) } : db; recommendation = recommend(source, inputForRecommendation()); page = "recomendar"; render(); }
 function startSession(taskId, source = "motor") { const task = db.tasks.find(t => t.id === taskId); if (!task) return; const part = source === "motor" && recommendation?.parts?.find(p=>p.task.id === taskId), next = source === "motor" && recommendation?.parts?.find(p=>p.task.id !== taskId); const planned = part && recommendation.parts.length > 1 ? 30 : db.preferences.duration; db.currentSession = { ...createSession({ taskId: task.id, taskTitleSnapshot: task.title, area: task.area, subarea: task.subarea, plannedMinutes: planned, initialEnergy: db.preferences.energy, availableContexts: db.preferences.contexts, recommendationSource: source, rejectionCount: db.cycle.rejectionCount }), queuedTaskId: next?.task.id || null }; task.status = "em_andamento"; task.updatedAt = now(); persist(); render(); }
