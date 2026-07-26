@@ -1,0 +1,68 @@
+const { chromium } = require("C:/Users/thais/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright");
+const path = require("path");
+const { pathToFileURL } = require("url");
+
+(async () => {
+  const browser = await chromium.launch({ headless: true, executablePath: "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe" });
+  const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+  page.setDefaultTimeout(8000);
+  const errors = [];
+  page.on("pageerror", error => errors.push(error.message));
+  page.on("console", message => { if (message.type() === "error") errors.push(message.text()); });
+
+  const desktop = pathToFileURL(path.resolve(__dirname, "../index.html")).href;
+  await page.goto(desktop);
+  console.log("desktop-open");
+  await page.waitForSelector(".agenda-today-bridge");
+  console.log("today-bridge-ok");
+  await page.click('[data-page="semana"]');
+  await page.waitForSelector(".agenda-week-grid");
+  console.log("week-grid-ok");
+  if (await page.locator(".agenda-block").count() < 10) throw new Error("Recorrências padrão não foram materializadas.");
+
+  await page.click('[data-agenda-action="new"]');
+  await page.fill('#agenda-block-form [name="title"]', "Teste de integração Agenda");
+  await page.selectOption('#agenda-block-form [name="responsibilityArea"]', "geld");
+  await page.selectOption('#agenda-block-form [name="blockType"]', "focus");
+  await page.click('#agenda-block-form button.primary');
+  await page.waitForSelector('text="Teste de integração Agenda"');
+  console.log("block-create-ok");
+  await page.screenshot({ path: path.resolve(__dirname, "../tmp/agenda-desktop-smoke.png"), fullPage: true });
+
+  await page.click('[data-page="tarefas"]');
+  await page.click('[data-action="new-task"]');
+  await page.waitForSelector('#task-form [name="responsibilityArea"]');
+  console.log("task-responsibility-ok");
+  await page.fill('#task-form [name="title"]', "Campanha Geld");
+  await page.selectOption('#task-form [name="responsibilityArea"]', "geld");
+  await page.click('#task-form button.primary');
+  await page.click('[data-action="new-task"]');
+  await page.fill('#task-form [name="title"]', "Curso profissional");
+  await page.selectOption('#task-form [name="responsibilityArea"]', "profissional");
+  await page.selectOption('#task-form [name="area"]', "estudo");
+  await page.click('#task-form button.primary');
+  await page.click('[data-page="semana"]');
+  const testBlock = page.locator('.agenda-block', { hasText: "Teste de integração Agenda" });
+  await testBlock.locator('[data-agenda-action="next"]').click({ force:true });
+  await page.waitForSelector("#agenda-recommendation-context");
+  await page.click('#recommend-form button[type="submit"]');
+  await page.waitForSelector('.recommend-card:has-text("Campanha Geld")');
+  if (await page.locator('.recommend-card:has-text("Curso profissional")').count()) throw new Error("Filtro de responsabilidade não foi respeitado.");
+  console.log("agenda-recommendation-filter-ok");
+
+  const database = await page.evaluate(() => JSON.parse(localStorage.getItem("proxima-acao-db")));
+  const mobile = pathToFileURL(path.resolve(__dirname, "../mobile/index.html")).href;
+  await page.goto(mobile);
+  await page.evaluate(value => localStorage.setItem("proxima-acao-mobile", JSON.stringify(value)), database);
+  await page.reload();
+  if (!await page.locator('[data-p="week"]').count()) throw new Error(`Mobile não renderizou. Erros: ${errors.join(" | ")} Conteúdo: ${(await page.locator("body").innerText()).slice(0,300)}`);
+  await page.click('[data-p="week"]');
+  await page.waitForSelector(".mobile-week-list");
+  console.log("mobile-week-ok");
+  if (await page.locator(".mobile-schedule-block").count() < 10) throw new Error("Agenda mobile não recebeu os blocos.");
+
+  await page.screenshot({ path: path.resolve(__dirname, "../tmp/agenda-smoke.png"), fullPage: true });
+  await browser.close();
+  if (errors.length) throw new Error(`Erros do navegador: ${errors.join(" | ")}`);
+  console.log("agenda-smoke-ok");
+})().catch(error => { console.error(error); process.exit(1); });

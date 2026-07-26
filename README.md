@@ -15,6 +15,19 @@ Abra `index.html` em um navegador moderno. Não há servidor, build, conta ou in
 - Cronômetro persistente, recuperação após recarregar e registro de tempo real. A conclusão antecipada converte o restante planejado em pausa.
 - Histórico, exportação e importação JSON com backup automático antes da importação.
 
+## Agenda Semanal × Próxima Ação
+
+O produto possui dois níveis complementares e independentes:
+
+- **Agenda Semanal** planeja atenção e tempo. Responde: “Onde devo estar e qual responsabilidade devo cuidar?”
+- **Próxima Ação** planeja execução. Responde: “Qual tarefa específica devo fazer agora?”
+
+A Agenda trabalha com as responsabilidades Família, Casa, Pessoal, Profissional e Geld. Seus blocos podem ser fixos, protegidos, de presença, foco, manutenção, margem ou reserváveis, cada um com rigidez própria. Blocos de foco e manutenção podem abrir o motor Próxima Ação já filtrado pela responsabilidade e registrar a sessão no bloco de origem.
+
+O planejamento assistido sempre apresenta uma proposta para revisão. Sugestões não são salvas automaticamente. O replanejamento preserva blocos rígidos e realizados, e a ocupação máxima padrão de 75% mantém margem explícita.
+
+Os dados continuam locais e o backup JSON agora inclui `scheduleBlocks`, `scheduleRecurrences`, `maintenanceRoutines`, `agendaHistory` e `agendaSettings`. Importações antigas continuam válidas; campos ausentes recebem valores padrão na migração para o schema 2.
+
 ## Estrutura
 
 ```

@@ -1,4 +1,4 @@
-export const DB_VERSION = 1;
+export const DB_VERSION = 2;
 export const STORAGE_KEY = "proxima-acao-db";
 export const BACKUP_KEY = "proxima-acao-before-import";
 export const AREAS = {
@@ -17,6 +17,11 @@ export const PRIORITY_LABELS = { normal: "Normal", alta: "Alta", critica: "Crít
 export const STATUS_LABELS = { ativa: "Ativa", em_andamento: "Em andamento", concluida: "Concluída", arquivada: "Arquivada" };
 export const DURATIONS = [15, 30, 60];
 export const AREA_COLORS = { trabalho: "blue", organizacao: "green", estudo: "purple", leitura: "amber", lazer: "coral", pausas: "gray" };
+export const RESPONSIBILITY_AREAS = { familia:"Família", casa:"Casa", pessoal:"Pessoal", profissional:"Profissional", geld:"Geld" };
+export const RESPONSIBILITY_COLORS = { familia:"#c9826f", casa:"#6d9c78", pessoal:"#5f8fbd", profissional:"#806bb3", geld:"#365f9d" };
+export const BLOCK_TYPES = { fixed:"Fixo", protected:"Protegido", presence:"Presença", focus:"Foco", maintenance:"Manutenção", margin:"Margem", reservable:"Reservável" };
+export const BLOCK_RIGIDITIES = { rigid:"Rígido", semiFlexible:"Semiflexível", flexible:"Flexível" };
+export const DEFAULT_AGENDA_SETTINGS = { maximumPlanningOccupancy:.75, minimumMarginMinutes:30, minimumFocusMinutes:60, contextSwitchPenalty:20, meetingDurationMinutes:90, weekStartHour:5, weekEndHour:23, responsibilities:Object.fromEntries(Object.keys(RESPONSIBILITY_AREAS).map(key=>[key,{active:true,color:RESPONSIBILITY_COLORS[key]}])) };
 export const DEFAULT_SETTINGS = {
   databaseVersion: DB_VERSION, weekStartsOn: 1,
   goals: {
