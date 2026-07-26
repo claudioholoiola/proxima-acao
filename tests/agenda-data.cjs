@@ -14,8 +14,17 @@ const result = vm.runInContext(`(() => {
   const routineTest=runAgendaTests();
   const afterEnd=blocksForWeek(database,new Date("2026-09-07T12:00:00")).some(block=>block.title==="Fisioterapia");
   const exported=exportDatabase(database);
-  return {version:database.version,taskResponsibility:database.tasks[0].responsibilityArea,sessionBlock:database.sessions[0].scheduleBlockId,hasCollections:Array.isArray(database.scheduleBlocks)&&Array.isArray(database.scheduleRecurrences)&&Array.isArray(database.maintenanceRoutines),routineTest,afterEnd,exportedAgenda:Array.isArray(exported.scheduleBlocks)&&!!exported.agendaSettings};
+  const taskWithResponsibility={id:"geld-task",title:"Preparar entrega Geld",responsibilityArea:"geld"};
+  const taskWithoutResponsibility={id:"plain-task",title:"Tarefa sem responsabilidade",responsibilityArea:null};
+  database.tasks.push(taskWithResponsibility,taskWithoutResponsibility);
+  const unplanned={id:"unplanned-session",taskId:taskWithResponsibility.id,taskTitleSnapshot:taskWithResponsibility.title,startedAt:"2026-07-20T14:10:00",executedMinutes:35,result:"concluida",scheduleBlockId:null};
+  const ignored={id:"ignored-session",taskId:taskWithoutResponsibility.id,taskTitleSnapshot:taskWithoutResponsibility.title,startedAt:"2026-07-20T15:00:00",executedMinutes:20,result:"concluida",scheduleBlockId:null};
+  database.sessions.push(unplanned,ignored);
+  const retroactive=recordUnplannedSessionInAgenda(database,unplanned);
+  const duplicate=recordUnplannedSessionInAgenda(database,unplanned);
+  const notScheduled=recordUnplannedSessionInAgenda(database,ignored);
+  return {version:database.version,taskResponsibility:database.tasks[0].responsibilityArea,sessionBlock:database.sessions[0].scheduleBlockId,hasCollections:Array.isArray(database.scheduleBlocks)&&Array.isArray(database.scheduleRecurrences)&&Array.isArray(database.maintenanceRoutines),routineTest,afterEnd,exportedAgenda:Array.isArray(exported.scheduleBlocks)&&!!exported.agendaSettings,retroactive:retroactive&&{source:retroactive.source,area:retroactive.responsibilityArea,status:retroactive.status,start:retroactive.startTime,end:retroactive.endTime,linked:unplanned.scheduleBlockId===retroactive.id},idempotent:duplicate===null&&database.scheduleBlocks.filter(block=>block.sourceSessionId===unplanned.id).length===1,ignored:notScheduled===null&&ignored.scheduleBlockId===null};
 })()`, context);
 
-if(result.version!==2||result.taskResponsibility!==null||result.sessionBlock!==null||!result.hasCollections||!result.routineTest.passed||result.afterEnd||!result.exportedAgenda) throw new Error(JSON.stringify(result));
+if(result.version!==2||result.taskResponsibility!==null||result.sessionBlock!==null||!result.hasCollections||!result.routineTest.passed||result.afterEnd||!result.exportedAgenda||result.retroactive?.source!=="unplanned-execution"||result.retroactive?.area!=="geld"||result.retroactive?.status!=="completed"||result.retroactive?.start!=="14:10"||result.retroactive?.end!=="14:45"||!result.retroactive?.linked||!result.idempotent||!result.ignored) throw new Error(JSON.stringify(result));
 console.log("agenda-data-ok",JSON.stringify(result));
