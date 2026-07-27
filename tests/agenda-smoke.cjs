@@ -31,6 +31,32 @@ const { pathToFileURL } = require("url");
   await page.click('#agenda-block-form button.primary');
   await page.waitForSelector('text="Teste de integração Agenda"');
   console.log("block-create-ok");
+  await page.click('[data-agenda-action="new"]');
+  await page.fill('#agenda-block-form [name="title"]', "Bloco Casa operacional");
+  await page.selectOption('#agenda-block-form [name="responsibilityArea"]', "casa");
+  await page.selectOption('#agenda-block-form [name="blockType"]', "maintenance");
+  await page.click('#agenda-block-form button.primary');
+  const houseBlock = page.locator('.agenda-block', { hasText: "Bloco Casa operacional" });
+  await houseBlock.locator('[data-agenda-action="routines"]').click({ force:true });
+  await page.waitForSelector(".maintenance-modal");
+  const selectedMaintenance = page.locator(".maintenance-modal [data-select-maintenance]:checked");
+  if (!await selectedMaintenance.count()) throw new Error("Seleção recomendada de rotinas ficou vazia.");
+  const maintenanceEstimate = await selectedMaintenance.evaluateAll(inputs=>inputs.reduce((sum,input)=>sum+Number(input.dataset.estimate||0),0));
+  if (maintenanceEstimate>60) throw new Error(`Seleção de rotinas ultrapassou o bloco: ${maintenanceEstimate} min.`);
+  await page.click("[data-start-maintenance]");
+  await page.waitForTimeout(200);
+  if (!await page.locator(".maintenance-focus-panel").count()) {
+    const maintenanceDebug = await page.evaluate(() => ({currentSession:JSON.parse(localStorage.getItem("proxima-acao-db"))?.currentSession,body:document.body.innerText.slice(0,500)}));
+    throw new Error(`Bloco Casa não iniciou: ${JSON.stringify(maintenanceDebug)} Erros: ${errors.join(" | ")}`);
+  }
+  await page.locator("[data-complete-maintenance]").first().check();
+  await page.click('[data-action="finish-session"][data-result="avancou"]');
+  const maintenanceDatabase = await page.evaluate(() => JSON.parse(localStorage.getItem("proxima-acao-db")));
+  const maintenanceSession = maintenanceDatabase.sessions.find(session=>session.recommendationSource==="agenda_maintenance");
+  if (!maintenanceSession||maintenanceSession.responsibilityArea!=="casa"||maintenanceSession.executedMinutes<1) throw new Error("Tempo do bloco Casa não foi registrado.");
+  if (!maintenanceDatabase.maintenanceRoutines.some(routine=>routine.completedDates?.length)) throw new Error("Rotina marcada não foi registrada.");
+  console.log("maintenance-block-flow-ok");
+  await page.click('[data-page="semana"]');
   await page.screenshot({ path: path.resolve(__dirname, "../tmp/agenda-desktop-smoke.png"), fullPage: true });
 
   await page.click('[data-page="tarefas"]');
@@ -64,8 +90,13 @@ const { pathToFileURL } = require("url");
   await page.click('#task-form button.primary');
   await page.click('[data-page="semana"]');
   const testBlock = page.locator('.agenda-block', { hasText: "Teste de integração Agenda" });
-  await testBlock.locator('[data-agenda-action="next"]').click({ force:true });
-  await page.waitForSelector("#agenda-recommendation-context");
+  await testBlock.locator('[data-agenda-action="next"]').evaluate(button=>button.click());
+  await page.waitForTimeout(200);
+  if (!await page.locator("#agenda-recommendation-context").count()) {
+    const testBlockId = await testBlock.getAttribute("data-agenda-block");
+    const recommendationDebug = await page.evaluate(id => ({body:document.body.innerText.slice(0,700),currentSession:JSON.parse(localStorage.getItem("proxima-acao-db"))?.currentSession,found:!!findBlock(db,id),context:getAgendaContext(),block:db.scheduleBlocks.find(item=>item.id===id)}),testBlockId);
+    throw new Error(`Contexto da Agenda não abriu: ${JSON.stringify(recommendationDebug)} Erros: ${errors.join(" | ")}`);
+  }
   await page.click('#recommend-form button[type="submit"]');
   await page.waitForSelector('.recommend-card:has-text("Campanha Geld")');
   if (await page.locator('.recommend-card:has-text("Curso profissional")').count()) throw new Error("Filtro de responsabilidade não foi respeitado.");
