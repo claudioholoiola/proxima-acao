@@ -5,6 +5,7 @@ const { pathToFileURL } = require("url");
 (async () => {
   const browser = await chromium.launch({ headless: true, executablePath: "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe" });
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+  await page.clock.setFixedTime(new Date("2026-07-26T12:00:00Z"));
   page.setDefaultTimeout(8000);
   const errors = [];
   page.on("pageerror", error => errors.push(error.message));
@@ -22,6 +23,22 @@ const { pathToFileURL } = require("url");
   const weekGeldPlanning = await page.locator(".balance-card", { hasText: "Geld" }).locator("p").first().locator("strong").textContent();
   if (todayGeldPlanning !== weekGeldPlanning) throw new Error(`Hoje e Semana divergem para Geld: ${todayGeldPlanning} / ${weekGeldPlanning}`);
   console.log("planning-reference-consistent-ok");
+  const blocksBeforeDayPlan = await page.evaluate(() => JSON.parse(localStorage.getItem("proxima-acao-db")).scheduleBlocks.length);
+  await page.click('[data-agenda-action="plan-day"]');
+  await page.waitForSelector(".day-plan-modal");
+  if (!await page.getByRole("heading", { name:"Planejar o dia" }).count()) throw new Error("Planejador diário não abriu.");
+  await page.screenshot({ path: path.resolve(__dirname, "../tmp/day-planner-smoke.png"), fullPage: true });
+  if (await page.locator("[data-apply-day-plan]").count()) {
+    if (!await page.locator("[data-day-proposal]").count()) throw new Error("Planejador não apresentou os intervalos livres.");
+    await page.click("[data-apply-day-plan]");
+    const dayPlanDatabase = await page.evaluate(() => JSON.parse(localStorage.getItem("proxima-acao-db")));
+    if (dayPlanDatabase.scheduleBlocks.length<=blocksBeforeDayPlan||!dayPlanDatabase.scheduleBlocks.some(block=>block.source==="day-plan")) throw new Error("Propostas do dia não foram aplicadas.");
+    const plannedHouseBlock = dayPlanDatabase.scheduleBlocks.find(block=>block.source==="day-plan"&&block.responsibilityArea==="casa");
+    if (plannedHouseBlock&&!plannedHouseBlock.plannedRoutineIds?.length) throw new Error("Bloco Casa proposto perdeu as rotinas recomendadas.");
+  } else {
+    await page.click(".day-plan-modal [data-agenda-close]");
+  }
+  console.log("day-planner-flow-ok");
   if (await page.locator(".agenda-block").count() < 10) throw new Error("Recorrências padrão não foram materializadas.");
 
   await page.click('[data-agenda-action="new"]');
