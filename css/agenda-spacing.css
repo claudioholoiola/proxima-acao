@@ -1,0 +1,49 @@
+.agenda-calendar {
+  overflow: visible;
+}
+
+.agenda-calendar-scroll {
+  max-height: 720px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  scrollbar-gutter: stable;
+}
+
+.agenda-week-grid {
+  min-width: 980px;
+  grid-template-columns: 64px repeat(7, minmax(130px, 1fr));
+  grid-template-rows: 46px repeat(var(--agenda-slots), 38px);
+  background: repeating-linear-gradient(to bottom, transparent 0, transparent 37px, #edf1f5 38px);
+}
+
+.agenda-corner {
+  z-index: 4;
+  position: sticky;
+  top: 0;
+  left: 0;
+}
+
+.agenda-day-head {
+  padding: 6px;
+  z-index: 3;
+}
+
+.agenda-time {
+  padding: 11px 6px 3px;
+  z-index: 2;
+  position: sticky;
+  left: 0;
+}
+
+.agenda-position { padding: 3px; }
+.agenda-block { min-height: 48px; padding: 8px; }
+
+@media (max-width: 860px) {
+  .agenda-calendar-scroll {
+    max-height: none;
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+  }
+}
