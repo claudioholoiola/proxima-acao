@@ -1,0 +1,65 @@
+.settings-goal-list,
+.settings-study-list {
+  display: grid;
+  gap: 9px;
+  margin: 16px 0 10px;
+}
+
+.settings-goal-list article,
+.settings-study-list article {
+  display: grid;
+  grid-template-columns: minmax(120px, .7fr) minmax(280px, 1.6fr) auto;
+  gap: 12px;
+  align-items: end;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  padding: 11px;
+}
+
+.settings-goal-list article > b,
+.settings-study-list article > b {
+  padding-bottom: 10px;
+}
+
+.settings-goal-list article > div,
+.settings-study-list article > div {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.settings-goal-list label,
+.settings-study-list label {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  color: #52606e;
+  font-size: 12px;
+}
+
+.settings-goal-list input,
+.settings-study-list input,
+.settings-add-row select {
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 8px;
+  background: #fff;
+}
+
+.settings-add-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 12px 0 4px;
+}
+
+.settings-add-row select { min-width: 180px; }
+
+@media (max-width: 620px) {
+  .settings-goal-list article,
+  .settings-study-list article { grid-template-columns: 1fr; gap: 8px; }
+  .settings-goal-list article > b,
+  .settings-study-list article > b { padding-bottom: 0; }
+  .settings-add-row { align-items: stretch; flex-direction: column; }
+  .settings-add-row select { min-width: 0; }
+}
