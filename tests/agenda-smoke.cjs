@@ -160,6 +160,27 @@ const { pathToFileURL } = require("url");
   if (await page.locator('.recommend-card:has-text("Curso profissional")').count()) throw new Error("Filtro de responsabilidade não foi respeitado.");
   console.log("agenda-recommendation-filter-ok");
 
+  await page.click('[data-page="hoje"]');
+  await page.evaluate(() => {
+    const database=JSON.parse(localStorage.getItem("proxima-acao-db"));
+    const base={minimumBlockMinutes:30,estimatedTotalMinutes:30,contexts:[],energyRequired:1,priority:"normal",deadline:"",recurrence:null,manuallyCritical:false,status:"ativa",createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
+    database.tasks.push(
+      {...base,id:"filter-responsibility",title:"Filtro pessoal",area:"trabalho",subarea:"operacional",responsibilityArea:"pessoal"},
+      {...base,id:"filter-area",title:"Filtro leitura",area:"leitura",subarea:"geral",responsibilityArea:"familia"},
+      {...base,id:"filter-excluded",title:"Filtro excluida",area:"organizacao",subarea:"geral",responsibilityArea:"geld",priority:"critica"}
+    );
+    localStorage.setItem("proxima-acao-db",JSON.stringify(database));
+  });
+  await page.reload();
+  await page.click('[data-page="recomendar"]');
+  if (!await page.locator('#recommend-responsibility-filter').count() || !await page.locator('#recommend-task-area-filter').count()) throw new Error("Filtros opcionais da recomendacao nao foram exibidos.");
+  await page.selectOption('#recommend-responsibility-filter', "pessoal");
+  await page.selectOption('#recommend-task-area-filter', "leitura");
+  await page.click('#recommend-form button[type="submit"]');
+  const filteredRecommendation=await page.locator('.recommend-card h2').first().textContent();
+  if (!['Filtro pessoal','Filtro leitura'].includes(filteredRecommendation)) throw new Error(`Filtro por OU ignorado: ${filteredRecommendation}`);
+  console.log("recommendation-optional-or-filter-ok");
+
   const database = await page.evaluate(() => JSON.parse(localStorage.getItem("proxima-acao-db")));
   const mobile = pathToFileURL(path.resolve(__dirname, "../mobile/index.html")).href;
   await page.goto(mobile);
