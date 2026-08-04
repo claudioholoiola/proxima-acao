@@ -13,6 +13,8 @@ const { pathToFileURL } = require("url");
 
   const desktop = pathToFileURL(path.resolve(__dirname, "../index.html")).href;
   await page.goto(desktop);
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
   console.log("desktop-open");
   await page.waitForSelector(".agenda-today-bridge");
   console.log("today-bridge-ok");
@@ -159,6 +161,16 @@ const { pathToFileURL } = require("url");
   await page.waitForSelector('.recommend-card:has-text("Campanha Geld")');
   if (await page.locator('.recommend-card:has-text("Curso profissional")').count()) throw new Error("Filtro de responsabilidade não foi respeitado.");
   console.log("agenda-recommendation-filter-ok");
+  await page.evaluate(() => showRejectModal());
+  await page.waitForSelector('.modal-backdrop .reason-buttons');
+  await page.click('.modal-backdrop [data-close-modal]');
+  if (await page.locator('.modal-backdrop .reason-buttons').count()) throw new Error("Janela de troca nao fechou.");
+  await page.evaluate(() => showRejectModal());
+  await page.waitForSelector('.modal-backdrop .reason-buttons');
+  await page.locator('.modal-backdrop [data-rejection-reason="energia"]').click();
+  await page.waitForTimeout(150);
+  if (await page.locator('.modal-backdrop .reason-buttons').count()) throw new Error("Escolha de motivo nao fechou a janela.");
+  console.log("rejection-modal-controls-ok");
 
   await page.click('[data-page="hoje"]');
   await page.evaluate(() => {
